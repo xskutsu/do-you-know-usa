@@ -178,13 +178,16 @@
 				pathElement.addEventListener("click", () => pathElementClickEvent(pathElement.dataset.id));
 			}
 		});
+		let capitalsDataCache = null;
 		const startButton = document.getElementById("start-button");
 		startButton.addEventListener("click", async function () {
 			if (quizSelect.value === "capitals") {
-				const response = await fetch("./capitals.json");
-				const data = await response.json();
+				if (capitalsDataCache === null) {
+					const response = await fetch("./capitals.json");
+					capitalsDataCache = await response.json();
+				}
 				for (const value of mapData.values()) {
-					value.name = data[value.id] ?? "Unknown Capital";
+					value.name = capitalsDataCache[value.id] ?? "Unknown Capital";
 				}
 			} else {
 				for (const value of mapData.values()) {
