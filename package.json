@@ -1,0 +1,16 @@
+{
+	"name": "do-you-know-usa",
+	"version": "1.0.0",
+	"description": "A simple game to help you memorize the states and capitals of the United States of America.",
+	"main": "index.js",
+	"scripts": {
+		"start": "node index.js"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "GNU AGPLv3",
+	"packageManager": "pnpm@10.11.0",
+	"dependencies": {
+		"express": "^5.1.0"
+	}
+}

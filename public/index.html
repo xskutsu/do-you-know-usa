@@ -1,0 +1,222 @@
+<!--
+	Note: Just because behavior is observed and documented from the original geoguessr game does not mean I will implement it this way.
+
+	Some background information while analyzing the behavior of https://www.geoguessr.com/vgp/3003
+	- Every click adds to a counter. Get it right, it adds to a seperate one. Total accuracy is calculated by dividing the correct clicks by the total clicks.
+	- Correct first try is white, correct second is yellow, third is orange, and any after are red.
+	- When you misclick 3 times the game displays a rapidly enclosing circle on the state you are missing.
+	- Timer starts right away after restarting.
+	- Shows the state's flag.
+	- No symbol for capitals.
+	- Capitals are shown as dots where they are.
+	- District of Columbia is NOT shown as a state, and is not in the states quiz. It IS in the capitals quiz. This makes sense.
+	- District of Columbia is not shown as another region but is just another dot.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Do You Know USA</title>
+	<link rel="stylesheet" href="./styles.css">
+</head>
+
+<body class="inter-gfont">
+	<div class="quiz-controls">
+		<label for="quiz-select" class="quiz-select-label">Quiz</label>
+		<select id="quiz-select">
+			<option value="states">States</option>
+			<option value="capitals">Capitals</option>
+		</select>
+		<button id="start-button" class="btn btn-primary">Start</button>
+		<button id="restart-button" class="btn btn-secondary" style="display: none;">Restart</button>
+	</div>
+	<div class="stats-area" id="stats-area">
+		<div class="stat-item">
+			<span class="stat-label">Accuracy</span>
+			<span class="stat-value" id="accuracy-value">...</span>
+		</div>
+		<div class="stat-item">
+			<span class="stat-label">Locations</span>
+			<span class="stat-value" id="locations-value">...</span>
+		</div>
+		<div class="stat-item">
+			<span class="stat-label">Elapsed</span>
+			<span class="stat-value" id="timer-text">...</span>
+		</div>
+	</div>
+	</div>
+	<div class="target-info-container">
+		<span>...<span id="target-text"></span></span>
+	</div>
+	<div id="us-map-container"></div>
+	<div class="footer">
+		<p>Made by <a href="https://github.com/xskutsu">xskutsu | Kaiden</a></p>
+	</div>
+	<script>
+		const mapData = new Map();
+		const locationsRemaining = [];
+		const quizSelect = document.getElementById("quiz-select");
+		const locationsValueElement = document.getElementById("locations-value");
+		let totalClicks = 0;
+		let correctClicks = 0;
+		let currentAttempts = 0;
+		const accuracyValueElement = document.getElementById("accuracy-value");
+		let timerInterval = null;
+		let timerTicker = 0;
+		const timerTextElement = document.getElementById("timer-text");
+		function timerTick() {
+			timerTicker++;
+			timerTextElement.textContent = `${Math.floor(timerTicker / 60)}:${`${timerTicker % 60}`.padStart(2, "0")}`;
+		}
+		const targetTextElement = document.getElementById("target-text");
+		function createNoticecircle(x, y) {
+			const element = document.createElement("div");
+			element.classList.add("notice-circle");
+			element.style.left = `${x}px`;
+			element.style.top = `${y}px`;
+			document.body.appendChild(element);
+			setTimeout(() => {
+				element.remove();
+			}, 2000);
+		}
+		const statsAreaContainer = document.getElementById("stats-area");
+		function quizCompletionEvent() {
+			clearInterval(timerInterval);
+			targetTextElement.parentElement.childNodes[0].textContent = `Congratulations! You found all of the ${quizSelect.value}!`;
+			targetTextElement.parentElement.style.zoom = "150%";
+			targetTextElement.textContent = "";
+			statsAreaContainer.classList.add("stats-area-completion");
+		}
+		function pathElementClickEvent(id) {
+			const data = mapData.get(id);
+			const pathElement = data.element;
+			if (!locationsRemaining.includes(id)) {
+				return;
+			}
+			if (id === locationsRemaining[0]) {
+				locationsRemaining.shift();
+				pathElement.style.transition = "all 0.2s ease-out";
+				pathElement.style.fill = ["#FFFFFF", "#FFFF00", "#FFA500", "#FF0000"][Math.min(currentAttempts, 3)];
+				pathElement.style.cursor = "default";
+				totalClicks++;
+				correctClicks++;
+				currentAttempts = 0;
+				locationsValueElement.textContent = `${mapData.size - locationsRemaining.length}/${mapData.size}`;
+				accuracyValueElement.textContent = `${Math.round((correctClicks / totalClicks) * 100)}%`;
+				if (locationsRemaining.length === 0) {
+					quizCompletionEvent();
+					return;
+				}
+				targetTextElement.textContent = mapData.get(locationsRemaining[0]).name;
+				return;
+			}
+			totalClicks++;
+			currentAttempts++;
+			accuracyValueElement.textContent = `${Math.round((correctClicks / totalClicks) * 100)}%`;
+			const originalFill = pathElement.style.fill;
+			pathElement.style.transition = "all";
+			pathElement.style.fill = "#CC0000";
+			requestAnimationFrame(function () {
+				pathElement.style.transition = "all 0.2s ease-out";
+				pathElement.style.fill = "#696969";
+				if (currentAttempts >= 3) {
+					const targetPathElement = mapData.get(locationsRemaining[0]).element;
+				}
+			});
+			if (currentAttempts >= 3) {
+				const targetPathElement = mapData.get(locationsRemaining[0]).element;
+				const bbox = targetPathElement.getBBox();
+				const centerX = bbox.x + bbox.width / 2;
+				const centerY = bbox.y + bbox.height / 2;
+				window.objectElement = objectElement;
+				const point = objectElement.contentDocument.querySelector("svg").createSVGPoint();
+				point.x = centerX;
+				point.y = centerY;
+				const ctm = targetPathElement.getCTM();
+				const transformed = point.matrixTransform(ctm);
+				const objectRect = objectElement.getBoundingClientRect();
+				const screenX = objectRect.left + transformed.x;
+				const screenY = objectRect.top + transformed.y;
+				createNoticecircle(screenX, screenY);
+			}
+		}
+		const objectElement = document.createElement("object");
+		objectElement.id = "us-map-object";
+		objectElement.data = "./us.svg";
+		objectElement.type = "image/svg+xml";
+		objectElement.classList.add("us-map");
+		objectElement.addEventListener("load", function () {
+			for (const pathElement of objectElement.contentDocument.querySelectorAll('path')) {
+				if (pathElement.dataset.id === "DC") {
+					continue;
+				}
+				pathElement.style.fill = "#696969";
+				pathElement.addEventListener("mouseenter", () => {
+					if (locationsRemaining.includes(pathElement.dataset.id)) {
+						pathElement.style.fill = "#797979";
+					}
+				});
+				pathElement.addEventListener("mouseleave", () => {
+					if (locationsRemaining.includes(pathElement.dataset.id)) {
+						pathElement.style.fill = "#696969";
+					}
+				});
+				mapData.set(pathElement.dataset.id, {
+					id: pathElement.dataset.id,
+					name: pathElement.dataset.name,
+					element: pathElement
+				});
+				pathElement.addEventListener("click", () => pathElementClickEvent(pathElement.dataset.id));
+			}
+		});
+		const startButton = document.getElementById("start-button");
+		startButton.addEventListener("click", async function () {
+			if (quizSelect.value === "capitals") {
+				const response = await fetch("./capitals.json");
+				const data = await response.json();
+				for (const value of mapData.values()) {
+					value.name = data[value.id] ?? "Unknown Capital";
+				}
+			} else {
+				for (const value of mapData.values()) {
+					value.name = value.element.dataset.name;
+				}
+			}
+			startButton.textContent = "Restart";
+			statsAreaContainer.classList.remove("stats-area-completion");
+			targetTextElement.parentElement.childNodes[0].textContent = "Find: ";
+			targetTextElement.parentElement.style.zoom = "100%";
+			locationsRemaining.length = 0;
+			for (const value of mapData.values()) {
+				locationsRemaining.push(value.id);
+				value.element.style.fill = "#696969";
+				value.element.style.cursor = "pointer";
+			}
+			for (let i = locationsRemaining.length - 1; i > 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1));
+				[locationsRemaining[i], locationsRemaining[j]] = [locationsRemaining[j], locationsRemaining[i]];
+			}
+			targetTextElement.textContent = mapData.get(locationsRemaining[0]).name;
+			timerTicker = 0;
+			timerTextElement.textContent = "0:00";
+			if (timerInterval !== null) {
+				clearInterval(timerInterval);
+			}
+			timerInterval = setInterval(timerTick, 1000);
+			locationsValueElement.textContent = `0/${mapData.size}`;
+			currentAttempts = 0;
+			totalClicks = 0;
+			correctClicks = 0;
+			accuracyValueElement.textContent = "...";
+		});
+		document.getElementById("us-map-container").appendChild(objectElement);
+	</script>
+</body>
+
+</html>
