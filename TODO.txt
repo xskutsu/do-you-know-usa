@@ -1,0 +1,3 @@
+Add sounds
+Add state flags
+Add dots for capital locations
