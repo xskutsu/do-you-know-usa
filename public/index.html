@@ -208,7 +208,6 @@
 				const j = Math.floor(Math.random() * (i + 1));
 				[locationsRemaining[i], locationsRemaining[j]] = [locationsRemaining[j], locationsRemaining[i]];
 			}
-			locationsRemaining.length = 2;
 			targetTextElement.textContent = mapData.get(locationsRemaining[0]).name;
 			timerTicker = 0;
 			timerTextElement.textContent = "0:00";
