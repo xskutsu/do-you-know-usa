@@ -123,21 +123,17 @@
 			currentAttempts++;
 			accuracyValueElement.textContent = `${Math.round((correctClicks / totalClicks) * 100)}%`;
 			const originalFill = pathElement.style.fill;
-			pathElement.style.transition = "all";
+			pathElement.style.transition = "none";
 			pathElement.style.fill = "#CC0000";
 			requestAnimationFrame(function () {
 				pathElement.style.transition = "all 0.2s ease-out";
 				pathElement.style.fill = "#696969";
-				if (currentAttempts >= 3) {
-					const targetPathElement = mapData.get(locationsRemaining[0]).element;
-				}
 			});
 			if (currentAttempts >= 3) {
 				const targetPathElement = mapData.get(locationsRemaining[0]).element;
 				const bbox = targetPathElement.getBBox();
 				const centerX = bbox.x + bbox.width / 2;
 				const centerY = bbox.y + bbox.height / 2;
-				window.objectElement = objectElement;
 				const point = objectElement.contentDocument.querySelector("svg").createSVGPoint();
 				point.x = centerX;
 				point.y = centerY;
@@ -184,7 +180,13 @@
 			if (quizSelect.value === "capitals") {
 				if (capitalsDataCache === null) {
 					const response = await fetch("./capitals.json");
-					capitalsDataCache = await response.json();
+					try {
+						capitalsDataCache = await response.json();
+					} catch (error) {
+						alert("Failed to fetch capitals. Try reloading?");
+						console.error(error);
+						return;
+					}
 				}
 				for (const value of mapData.values()) {
 					value.name = capitalsDataCache[value.id] ?? "Unknown Capital";
