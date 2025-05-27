@@ -92,7 +92,7 @@
 		function quizCompletionEvent() {
 			clearInterval(timerInterval);
 			targetTextElement.parentElement.childNodes[0].textContent = `Congratulations! You found all of the ${quizSelect.value}!`;
-			targetTextElement.parentElement.style.zoom = "150%";
+			// targetTextElement.parentElement.style.zoom = "100%";
 			targetTextElement.textContent = "";
 			statsAreaContainer.classList.add("stats-area-completion");
 		}
