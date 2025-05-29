@@ -57,7 +57,7 @@
 	</div>
 	<div id="us-map-container"></div>
 	<div class="footer">
-		<span>Made by <a href="https://github.com/xskutsu">xskutsu (Kaiden)</a></span>
+		<span>Made by <a href="https://github.com/xskutsu">xskutsu (K. C.)</a></span>
 		<br>
 		<span>Thanks to <a href="https://simplemaps.com/resources/svg-us">Chris Youderian</a> for the map image</span>
 	</div>
@@ -92,7 +92,6 @@
 		function quizCompletionEvent() {
 			clearInterval(timerInterval);
 			targetTextElement.parentElement.childNodes[0].textContent = `Congratulations! You found all of the ${quizSelect.value}!`;
-			// targetTextElement.parentElement.style.zoom = "100%";
 			targetTextElement.textContent = "";
 			statsAreaContainer.classList.add("stats-area-completion");
 		}
